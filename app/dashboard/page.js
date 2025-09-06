@@ -4,7 +4,8 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChartComponent } from "@/components/charts/bar-chart";
 import { AreaChartComponent } from "@/components/charts/area-chart";
-import { PieChartDonutText } from "@/components/charts/pie-chart-donut-text";
+import { ChartPieDonutText } from "@/components/charts/chart-pie-donut-text";
+import { PieShadcnStandalone } from "@/components/charts/pie-shadcn-standalone";
 import { StatisticCard, TotalProjectsCard } from "@/components/ui/statistic-card";
 import dynamic from 'next/dynamic';
 
@@ -530,10 +531,12 @@ export default function Dashboard() {
               </div>
             </Card>
             
-            {/* Property Type Distribution Pie Chart */}
-            <PieChartDonutText 
-              data={propertyTypeData} 
-              title="Property Type Distribution" 
+            {/* Property Type Distribution Pie Chart (Dynamic + brand palette) */}
+            <PieShadcnStandalone 
+              data={propertyTypeData}
+              title="Property Type Distribution"
+              description=""
+              colors={["#6a329f", "#601f9e", "#522081", "#360f5a", "#1c0333"]}
             />
           </div>
           
