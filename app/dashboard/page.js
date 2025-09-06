@@ -6,7 +6,16 @@ import { BarChartComponent } from "@/components/charts/bar-chart";
 import { AreaChartComponent } from "@/components/charts/area-chart";
 import { PieChartDonutActive } from "@/components/charts/pie-chart-donut";
 import { StatisticCard, TotalProjectsCard } from "@/components/ui/statistic-card";
-import { InteractiveMap } from "@/components/maps/interactive-map";
+import dynamic from 'next/dynamic';
+
+const InteractiveMap = dynamic(() => import('@/components/maps/interactive-map').then(mod => ({ default: mod.InteractiveMap })), { 
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-80 rounded-lg overflow-hidden border border-gray-200 z-0 flex items-center justify-center bg-gray-100">
+      <div className="text-gray-500">Loading map...</div>
+    </div>
+  )
+});
 import Sidebar from "@/components/layout/sidebar";
 import { Plus, LogOut, Briefcase, DollarSign, Home, Users } from 'lucide-react';
 import { Button } from "@/components/ui/button";
