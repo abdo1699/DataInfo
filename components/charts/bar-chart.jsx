@@ -17,8 +17,8 @@ export function BarChartComponent({ data, title, dataKey = 'value', valueSuffix 
             margin={{
               top: 10,
               right: 30,
-              left: 0,
-              bottom: 0,
+              left: 60,
+              bottom: 20,
             }}
             barSize={20}
           >
@@ -33,7 +33,8 @@ export function BarChartComponent({ data, title, dataKey = 'value', valueSuffix 
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#6b7280' }}
-              width={40}
+              width={80}
+              tickFormatter={(value) => value.toLocaleString()}
             />
             <Tooltip 
               contentStyle={{
@@ -45,7 +46,7 @@ export function BarChartComponent({ data, title, dataKey = 'value', valueSuffix 
             />
             <Bar 
               dataKey={dataKey} 
-              fill="#8884d8" 
+              fill="#82ded5" 
               radius={[4, 4, 0, 0]}
             />
           </BarChart>

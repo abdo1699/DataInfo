@@ -48,14 +48,14 @@ export function PieChartDonutActive({ data, title = "Property Type Distribution"
     );
   }
   
-  // Transform data to match the expected format with teal gradient colors
+  // Transform data to match the expected format with unified color
   const colors = [
-    '#14B8A6', // Teal-500
-    '#0D9488', // Teal-600  
-    '#0F766E', // Teal-700
-    '#134E4A', // Teal-800
-    '#042F2E', // Teal-900
-    '#5EEAD4', // Teal-300
+    '#82ded5', // Main color
+    '#82ded5', // Main color
+    '#82ded5', // Main color
+    '#82ded5', // Main color
+    '#82ded5', // Main color
+    '#82ded5', // Main color
   ];
   
   const chartData = filteredData.map((item, index) => ({
@@ -75,12 +75,11 @@ export function PieChartDonutActive({ data, title = "Property Type Distribution"
   return (
     <Card className="flex flex-col">
       <CardHeader className="items-center pb-0">
-        <CardTitle className="text-lg font-semibold text-gray-900">{title}</CardTitle>
-        <CardDescription>Property distribution across types</CardDescription>
+        <CardTitle className="text-sm font-medium text-gray-900">{title}</CardTitle>
       </CardHeader>
       <CardContent className="flex-1 pb-0">
-        <div className="mx-auto aspect-square max-h-[250px]">
-          <PieChart width={300} height={300}>
+        <div className="mx-auto aspect-square h-[300px]">
+          <PieChart width={300} height={300} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
             <ChartTooltip />
             <Pie
               data={chartData}
@@ -102,12 +101,9 @@ export function PieChartDonutActive({ data, title = "Property Type Distribution"
           </PieChart>
         </div>
       </CardContent>
-      <CardFooter className="flex-col gap-2 text-sm">
+      <CardFooter className="flex-col gap-2 text-sm pt-4">
         <div className="flex items-center gap-2 leading-none font-medium">
           Total properties: {data.reduce((sum, item) => sum + item.value, 0)} <TrendingUp className="h-4 w-4" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Showing property distribution by type
         </div>
       </CardFooter>
     </Card>

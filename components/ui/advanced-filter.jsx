@@ -71,6 +71,36 @@ export function AdvancedFilter({
 
   return (
     <Card className="p-4 mb-8">
+      {/* Selected Filter Tags */}
+      {(selectedCities.length > 0 || selectedTypes.length > 0) && (
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2">
+            {selectedCities.map(city => (
+              <div key={city} className="flex items-center gap-1 px-3 py-1 bg-blue-100 border border-blue-300 rounded-full text-sm text-blue-700">
+                <span>{city}</span>
+                <button
+                  onClick={() => handleCityToggle(city)}
+                  className="hover:bg-blue-200 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            {selectedTypes.map(type => (
+              <div key={type} className="flex items-center gap-1 px-3 py-1 bg-green-100 border border-green-300 rounded-full text-sm text-green-700">
+                <span>{type}</span>
+                <button
+                  onClick={() => handleTypeToggle(type)}
+                  className="hover:bg-green-200 rounded-full p-0.5"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Cities Filter */}
         <div className="relative" ref={citiesRef}>
@@ -85,7 +115,9 @@ export function AdvancedFilter({
               <span>
                 {selectedCities.length === 0 
                   ? 'All Cities' 
-                  : `${selectedCities.length} selected`
+                  : selectedCities.length <= 2 
+                    ? selectedCities.join(', ')
+                    : `${selectedCities.length} selected`
                 }
               </span>
               <ChevronDown className="h-4 w-4" />
@@ -149,7 +181,9 @@ export function AdvancedFilter({
               <span>
                 {selectedTypes.length === 0 
                   ? 'All Types' 
-                  : `${selectedTypes.length} selected`
+                  : selectedTypes.length <= 2 
+                    ? selectedTypes.join(', ')
+                    : `${selectedTypes.length} selected`
                 }
               </span>
               <ChevronDown className="h-4 w-4" />

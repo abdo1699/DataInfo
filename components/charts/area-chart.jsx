@@ -12,24 +12,24 @@ export function AreaChartComponent({
   return (
     <Card className="p-6 shadow-sm border border-gray-100">
       <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-gray-900">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium text-gray-900">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-80">
+        <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
               margin={{
                 top: 10,
-                right: 30,
+                right: 10,
                 left: 0,
-                bottom: 0,
+                bottom: 10,
               }}
             >
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#82ded5" stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor="#82ded5" stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -60,7 +60,7 @@ export function AreaChartComponent({
               <Area
                 type="monotone"
                 dataKey={dataKey}
-                stroke="#3B82F6"
+                stroke="#82ded5"
                 strokeWidth={2}
                 fill="url(#colorValue)"
               />

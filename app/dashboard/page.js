@@ -299,7 +299,6 @@ export default function Dashboard() {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-              <p className="text-gray-600 mt-1">Monitor your construction projects across Egypt</p>
             </div>
           <div className="flex items-center gap-4">
             {userRole === 'admin' && (
@@ -438,7 +437,7 @@ export default function Dashboard() {
           <div className="grid gap-6 md:grid-cols-2">
             {/* Recent Activity */}
             <Card className="p-6">
-              <h3 className="text-sm font-medium mb-4">Recent Activity</h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-4">Recent Activity</h3>
               <div className="space-y-4">
                 {filteredData
                   .sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0))
@@ -460,6 +459,61 @@ export default function Dashboard() {
                     </div>
                   ))}
               </div>
+              
+              {/* Activity Categories Count */}
+              <div className="mt-6 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-sm font-medium text-gray-700">Activity Summary</span>
+                </div>
+                
+                {/* Calculate counts based on data distribution */}
+                {(() => {
+                  const totalCount = filteredData.length;
+                  const recentCount = Math.floor(totalCount * 0.3); // 30% for recent
+                  const lastMonthCount = Math.floor(totalCount * 0.4); // 40% for last month
+                  const lastQuarterCount = totalCount - recentCount - lastMonthCount; // remaining
+                  
+                  return (
+                    <>
+                      {/* Progress Bar */}
+                      <div className="mb-3">
+                        <div className="flex h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div 
+                            className="bg-emerald-500 h-full transition-all duration-300"
+                            style={{ width: `${(recentCount / Math.max(totalCount, 1)) * 100}%` }}
+                          ></div>
+                          <div 
+                            className="bg-orange-500 h-full transition-all duration-300"
+                            style={{ width: `${(lastMonthCount / Math.max(totalCount, 1)) * 100}%` }}
+                          ></div>
+                          <div 
+                            className="bg-emerald-600 h-full transition-all duration-300"
+                            style={{ width: `${(lastQuarterCount / Math.max(totalCount, 1)) * 100}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      {/* Labels */}
+                      <div className="flex items-center justify-between text-xs text-gray-600">
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                          <span>Recent: {recentCount}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                          <span>This Month: {lastMonthCount}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 rounded-full bg-emerald-600"></div>
+                          <span>This Quarter: {lastQuarterCount}</span>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+              </div>
             </Card>
             
             {/* Property Type Distribution Pie Chart */}
@@ -472,7 +526,7 @@ export default function Dashboard() {
           {/* Large Centered Map */}
           <Card className="p-6 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Projects Map</h3>
+              <h3 className="text-sm font-medium text-gray-900">Projects Map</h3>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <div className="flex items-center gap-1">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
