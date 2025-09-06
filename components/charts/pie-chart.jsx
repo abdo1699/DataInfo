@@ -4,7 +4,7 @@ import { PieChart as RechartsPieChart, Pie, Cell, ResponsiveContainer, Tooltip, 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function PieChartComponent({ data, title }) {
-  const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+  const COLORS = ['#7e22ce'];
 
   return (
     <Card className="w-full shadow-sm border border-gray-100">
@@ -20,14 +20,14 @@ export function PieChartComponent({ data, title }) {
               cy="50%"
               labelLine={false}
               outerRadius={100}
-              fill="#8884d8"
+              fill="#7e22ce"
               dataKey="value"
               label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
               stroke="#fff"
               strokeWidth={2}
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${index}`} fill="#7e22ce" />
               ))}
             </Pie>
             <Tooltip 

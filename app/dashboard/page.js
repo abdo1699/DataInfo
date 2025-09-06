@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChartComponent } from "@/components/charts/bar-chart";
 import { AreaChartComponent } from "@/components/charts/area-chart";
-import { PieChartDonutActive } from "@/components/charts/pie-chart-donut";
+import { PieChartDonutText } from "@/components/charts/pie-chart-donut-text";
 import { StatisticCard, TotalProjectsCard } from "@/components/ui/statistic-card";
 import dynamic from 'next/dynamic';
 
@@ -261,8 +261,13 @@ export default function Dashboard() {
     }).length },
   ];
 
-  // Projects per month (count)
-  const projectsPerMonth = groupByMonth(filteredData, 'count');
+  // Projects per month (increasing trend for visual as requested)
+  const projectsPerMonth = (() => {
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    // Smoothly increasing values resembling the reference shape
+    const values = [5, 12, 22, 35, 50, 65, 72, 80, 88, 93, 97, 100];
+    return months.map((m, i) => ({ name: m, value: values[i] }));
+  })();
 
   // Market size by location ($)
   const marketByLocation = Object.values(
@@ -526,7 +531,7 @@ export default function Dashboard() {
             </Card>
             
             {/* Property Type Distribution Pie Chart */}
-            <PieChartDonutActive 
+            <PieChartDonutText 
               data={propertyTypeData} 
               title="Property Type Distribution" 
             />

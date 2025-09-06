@@ -50,12 +50,12 @@ export function PieChartDonutActive({ data, title = "Property Type Distribution"
   
   // Transform data to match the expected format with unified color
   const colors = [
-    '#82ded5', // Main color
-    '#82ded5', // Main color
-    '#82ded5', // Main color
-    '#82ded5', // Main color
-    '#82ded5', // Main color
-    '#82ded5', // Main color
+    '#7e22ce',
+    '#7e22ce',
+    '#7e22ce',
+    '#7e22ce',
+    '#7e22ce',
+    '#7e22ce',
   ];
   
   const chartData = filteredData.map((item, index) => ({

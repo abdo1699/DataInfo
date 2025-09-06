@@ -28,8 +28,8 @@ export function AreaChartComponent({
             >
               <defs>
                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#82ded5" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#82ded5" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#7e22ce" stopOpacity={0.25}/>
+                  <stop offset="95%" stopColor="#7e22ce" stopOpacity={0.05}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -60,8 +60,8 @@ export function AreaChartComponent({
               <Area
                 type="monotone"
                 dataKey={dataKey}
-                stroke="#82ded5"
-                strokeWidth={2}
+                stroke="#7e22ce"
+                strokeWidth={3}
                 fill="url(#colorValue)"
               />
             </AreaChart>

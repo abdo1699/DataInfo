@@ -2,7 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-export function Card({
+function Card({
   className,
   ...props
 }) {
@@ -17,7 +17,7 @@ export function Card({
   );
 }
 
-export function CardHeader({
+function CardHeader({
   className,
   ...props
 }) {
@@ -32,7 +32,7 @@ export function CardHeader({
   );
 }
 
-export function CardTitle({
+function CardTitle({
   className,
   ...props
 }) {
@@ -44,7 +44,7 @@ export function CardTitle({
   );
 }
 
-export function CardDescription({
+function CardDescription({
   className,
   ...props
 }) {
@@ -56,7 +56,7 @@ export function CardDescription({
   );
 }
 
-export function CardAction({
+function CardAction({
   className,
   ...props
 }) {
@@ -71,14 +71,14 @@ export function CardAction({
   );
 }
 
-export function CardContent({
+function CardContent({
   className,
   ...props
 }) {
   return (<div data-slot="card-content" className={cn("px-6", className)} {...props} />);
 }
 
-export function CardFooter({
+function CardFooter({
   className,
   ...props
 }) {

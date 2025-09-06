@@ -45,8 +45,8 @@ export function LineChartComponent({ data, title, dataKey = 'value', valueSuffix
             <Line 
               type="monotone" 
               dataKey={dataKey} 
-              stroke="#8884d8" 
-              strokeWidth={2}
+              stroke="#7e22ce" 
+              strokeWidth={3}
               dot={false}
               activeDot={{ r: 6 }}
             />

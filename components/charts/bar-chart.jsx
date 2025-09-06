@@ -34,7 +34,7 @@ export function BarChartComponent({ data, title, dataKey = 'value', valueSuffix 
               tickLine={false}
               tick={{ fill: '#6b7280' }}
               width={80}
-              tickFormatter={(value) => value.toLocaleString()}
+              tickFormatter={(value) => `${Math.round(value / 1_000_000)} M`}
             />
             <Tooltip 
               contentStyle={{
@@ -42,11 +42,11 @@ export function BarChartComponent({ data, title, dataKey = 'value', valueSuffix 
                 border: '1px solid #e5e7eb',
                 boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
               }}
-              formatter={(value) => [`${value}${valueSuffix}`, title]}
+              formatter={(value) => [`${Math.round(value / 1_000_000)} M`, title]}
             />
             <Bar 
               dataKey={dataKey} 
-              fill="#82ded5" 
+              fill="#7e22ce" 
               radius={[4, 4, 0, 0]}
             />
           </BarChart>
