@@ -295,7 +295,7 @@ export default function Dashboard() {
         <div className="flex-1 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <div className="mb-8">
+        <div className="mb-12">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
@@ -324,7 +324,7 @@ export default function Dashboard() {
         </div>
         
         {/* Advanced Filter Section */}
-        <div className="mb-8">
+        <div className="mb-8 mt-8">
           <AdvancedFilter
             cities={cities}
             propertyTypes={propertyTypes}

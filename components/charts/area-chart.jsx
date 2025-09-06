@@ -10,20 +10,20 @@ export function AreaChartComponent({
   valueSuffix = "" 
 }) {
   return (
-    <Card className="p-6 shadow-sm border border-gray-100">
-      <CardHeader className="pb-4">
+    <Card className="p-6 pl-0 pr-6 pt-6 pb-6 shadow-sm border border-gray-100">
+      <CardHeader className="pb-4 pl-6">
         <CardTitle className="text-sm font-medium text-gray-900">{title}</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="h-[300px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
               data={data}
               margin={{
-                top: 10,
-                right: 10,
+                top: 0,
+                right: 0,
                 left: 0,
-                bottom: 10,
+                bottom: 0,
               }}
             >
               <defs>

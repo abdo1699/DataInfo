@@ -138,7 +138,7 @@ function AddDataContent() {
               <p className="text-gray-600 mt-1">Add a new construction project to your portfolio</p>
             </div>
             <Button variant="outline" onClick={() => router.push('/dashboard')}>
-              Back to Dashboard
+              View Dashboard
             </Button>
           </div>
         </div>

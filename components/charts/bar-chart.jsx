@@ -15,10 +15,10 @@ export function BarChartComponent({ data, title, dataKey = 'value', valueSuffix 
           <BarChart
             data={data}
             margin={{
-              top: 10,
+              top: 0,
               right: 30,
               left: 60,
-              bottom: 20,
+              bottom: 0,
             }}
             barSize={20}
           >
