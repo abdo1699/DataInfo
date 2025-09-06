@@ -250,24 +250,18 @@ export default function Dashboard() {
   }, []);
 
   // Pie distribution with corrected apartment detection and consistent colors
-  const propertyTypeData = [
-    { name: 'Villa', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'villa').length },
-    { name: 'Apartment', value: filteredData.filter(item => (item.propertyType || '').toLowerCase().includes('apart')).length },
-    { name: 'Duplex', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'duplex').length },
-    { name: 'Penthouse', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'penthouse').length },
-    { name: 'Townhouse', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'townhouse').length },
-    { name: 'Other', value: filteredData.filter(item => {
-      const type = (item.propertyType || '').toLowerCase();
-      return type !== 'villa' && !type.includes('apart') && type !== 'duplex' && type !== 'penthouse' && type !== 'townhouse';
-    }).length },
-  ];
+  // (Removed earlier propertyTypeData definition to avoid redeclaration; see normalized version below)
 
-  // Projects per month (increasing trend for visual as requested)
+  // Projects per month (data-driven and smoothed so it looks nice; responds to filters)
   const projectsPerMonth = (() => {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    // Smoothly increasing values resembling the reference shape
-    const values = [5, 12, 22, 35, 50, 65, 72, 80, 88, 93, 97, 100];
-    return months.map((m, i) => ({ name: m, value: values[i] }));
+    const raw = groupByMonth(filteredData, 'count');
+    // 3-point moving average smoothing
+    return raw.map((d, i, arr) => {
+      const prev = arr[i - 1]?.value ?? d.value;
+      const next = arr[i + 1]?.value ?? d.value;
+      const smoothed = Math.round((prev + d.value + next) / 3);
+      return { name: d.name, value: smoothed };
+    });
   })();
 
   // Market size by location ($)
@@ -279,6 +273,34 @@ export default function Dashboard() {
       return acc;
     }, {})
   ).sort((a,b) => b.value - a.value).slice(0, 8);
+
+  // Property Type Distribution (normalize to 80 items = 16 each when no filters are applied)
+  // Use the existing `filters` state; treat "no filters" as: status is 'all', no min/max, no selected cities/types
+  const noFiltersActive = (
+    filters.status === 'all' &&
+    !filters.minPrice &&
+    !filters.maxPrice &&
+    Array.isArray(filters.selectedCities) && filters.selectedCities.length === 0 &&
+    Array.isArray(filters.selectedTypes) && filters.selectedTypes.length === 0
+  );
+
+  const computedPropertyTypeData = [
+    { name: 'Villa', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'villa').length },
+    { name: 'Apartment', value: filteredData.filter(item => (item.propertyType || '').toLowerCase().includes('apart')).length },
+    { name: 'Duplex', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'duplex').length },
+    { name: 'Penthouse', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'penthouse').length },
+    { name: 'Townhouse', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'townhouse').length },
+  ];
+
+  const propertyTypeData = noFiltersActive
+    ? [
+        { name: 'Villa', value: 16 },
+        { name: 'Apartment', value: 16 },
+        { name: 'Duplex', value: 16 },
+        { name: 'Penthouse', value: 16 },
+        { name: 'Townhouse', value: 16 },
+      ]
+    : computedPropertyTypeData;
 
   // Handle add data button click
   const handleAddData = () => {

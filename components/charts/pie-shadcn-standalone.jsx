@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { TrendingUp } from "lucide-react"
-import { Label, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
+import { Label, Pie, PieChart, ResponsiveContainer, Tooltip, Cell } from "recharts"
 
 import {
   Card,
@@ -21,6 +21,61 @@ export function PieShadcnStandalone({
   description = "January - June 2024",
   colors = ["#6a329f", "#601f9e", "#522081", "#360f5a", "#1c0333"],
 }) {
+  // Helper: create n shades from a base hex color by adjusting lightness
+  const makeShades = React.useCallback((baseHex, count) => {
+    const hexToHsl = (hex) => {
+      const r = parseInt(hex.slice(1, 3), 16) / 255
+      const g = parseInt(hex.slice(3, 5), 16) / 255
+      const b = parseInt(hex.slice(5, 7), 16) / 255
+      const max = Math.max(r, g, b), min = Math.min(r, g, b)
+      let h, s, l = (max + min) / 2
+      if (max === min) { h = s = 0 } else {
+        const d = max - min
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min)
+        switch (max) {
+          case r: h = (g - b) / d + (g < b ? 6 : 0); break
+          case g: h = (b - r) / d + 2; break
+          case b: h = (r - g) / d + 4; break
+        }
+        h = h / 6
+      }
+      return { h, s, l }
+    }
+    const hslToHex = ({ h, s, l }) => {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1
+        if (t > 1) t -= 1
+        if (t < 1/6) return p + (q - p) * 6 * t
+        if (t < 1/2) return q
+        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6
+        return p
+      }
+      let r, g, b
+      if (s === 0) { r = g = b = l } else {
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s
+        const p = 2 * l - q
+        r = hue2rgb(p, q, h + 1/3)
+        g = hue2rgb(p, q, h)
+        b = hue2rgb(p, q, h - 1/3)
+      }
+      const toHex = (x) => Math.round(x * 255).toString(16).padStart(2, '0')
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`
+    }
+    try {
+      const base = hexToHsl(baseHex)
+      // Generate distinct lightness steps from darker to lighter
+      const steps = Array.from({ length: count }, (_, i) => {
+        const t = i / Math.max(count - 1, 1) // 0..1
+        // Lightness from 0.25..0.70 for clear separation
+        const l = 0.25 + t * (0.70 - 0.25)
+        return hslToHex({ h: base.h, s: base.s, l })
+      })
+      return steps
+    } catch {
+      return colors.slice(0, count)
+    }
+  }, [colors])
+
   // Map incoming data -> recharts format and apply brand palette
   const chartData = React.useMemo(() => {
     const src = Array.isArray(data) && data.length > 0
@@ -32,12 +87,13 @@ export function PieShadcnStandalone({
           { name: "Segment D", value: 173 },
           { name: "Segment E", value: 190 },
         ]
+    const shades = makeShades(colors[0], Math.min(src.length, 5))
     return src.slice(0, 5).map((d, i) => ({
       name: d.name,
       visitors: Number(d.value) || 0,
-      fill: colors[i % colors.length],
+      fill: shades[i],
     }))
-  }, [data, colors])
+  }, [data, colors, makeShades])
 
   const total = React.useMemo(() => chartData.reduce((s, d) => s + d.visitors, 0), [chartData])
 
@@ -68,6 +124,9 @@ export function PieShadcnStandalone({
                 stroke="transparent"
                 strokeWidth={0}
               >
+                {chartData.map((d, i) => (
+                  <Cell key={`cell-${i}`} fill={d.fill} />
+                ))}
                 <Label
                   content={({ viewBox }) => {
                     if (viewBox && "cx" in viewBox && "cy" in viewBox) {
