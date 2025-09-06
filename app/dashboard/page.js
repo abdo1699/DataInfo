@@ -1,26 +1,36 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { BarChartComponent } from "@/components/charts/bar-chart";
 import { AreaChartComponent } from "@/components/charts/area-chart";
+import { fillMissingMonths } from "@/lib/fillMissingMonths";
 import { ChartPieDonutText } from "@/components/charts/chart-pie-donut-text";
 import { PieShadcnStandalone } from "@/components/charts/pie-shadcn-standalone";
-import { StatisticCard, TotalProjectsCard } from "@/components/ui/statistic-card";
-import dynamic from 'next/dynamic';
+import {
+  StatisticCard,
+  TotalProjectsCard,
+} from "@/components/ui/statistic-card";
+import dynamic from "next/dynamic";
 
-const InteractiveMap = dynamic(() => import('@/components/maps/interactive-map').then(mod => ({ default: mod.InteractiveMap })), { 
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-80 rounded-lg overflow-hidden border border-gray-200 z-0 flex items-center justify-center bg-gray-100">
-      <div className="text-gray-500">Loading map...</div>
-    </div>
-  )
-});
+const InteractiveMap = dynamic(
+  () =>
+    import("@/components/maps/interactive-map").then((mod) => ({
+      default: mod.InteractiveMap,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-80 rounded-lg overflow-hidden border border-gray-200 z-0 flex items-center justify-center bg-gray-100">
+        <div className="text-gray-500">Loading map...</div>
+      </div>
+    ),
+  }
+);
 import Sidebar from "@/components/layout/sidebar";
-import { Plus, LogOut, Briefcase, DollarSign, Home, Users } from 'lucide-react';
+import { Plus, LogOut, Briefcase, DollarSign, Home, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -31,23 +41,36 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { AdvancedFilter } from "@/components/ui/advanced-filter";
-import Image from 'next/image';
+import Image from "next/image";
 
 // Helper: group data by month; if valueKey is 'count' we count items, else sum and avg
-const groupByMonth = (data, valueKey = 'price') => {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const result = months.map(month => ({
+const groupByMonth = (data, valueKey = "price") => {
+  const months = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+  const result = months.map((month) => ({
     name: month,
     value: 0,
-    count: 0
+    count: 0,
   }));
 
-  data.forEach(item => {
+  data.forEach((item) => {
     if (!item.ts) return;
     const date = new Date(item.ts);
     const monthIndex = date.getMonth();
     if (monthIndex >= 0 && monthIndex < 12) {
-      if (valueKey === 'count') {
+      if (valueKey === "count") {
         result[monthIndex].value += 1;
       } else {
         result[monthIndex].value += parseFloat(item[valueKey] || 0);
@@ -56,20 +79,29 @@ const groupByMonth = (data, valueKey = 'price') => {
     }
   });
 
-  if (valueKey === 'count') return result; // already counts per month
-  return result.map(item => ({ ...item, value: Math.round(item.value / (item.count || 1)) }));
+  let finalResult;
+  if (valueKey === "count") {
+    finalResult = result;
+  } else {
+    finalResult = result.map((item) => ({
+      ...item,
+      value: Math.round(item.value / (item.count || 1)),
+    }));
+  }
+  // Ensure all months are present, even if filtered data is sparse
+  return fillMissingMonths(finalResult, "value");
 };
 
 // Helper function to group data by status
 const groupByStatus = (data) => {
-  const statuses = ['in progress', 'finished'];
-  return statuses.map(status => ({
+  const statuses = ["in progress", "finished"];
+  return statuses.map((status) => ({
     name: status.charAt(0).toUpperCase() + status.slice(1),
-    value: data.filter(item => 
-      Array.isArray(item.status) 
+    value: data.filter((item) =>
+      Array.isArray(item.status)
         ? item.status.includes(status)
         : item.status === status
-    ).length
+    ).length,
   }));
 };
 
@@ -77,21 +109,34 @@ const groupByStatus = (data) => {
 const calculateKpis = (data) => {
   const totalProjects = data.length;
   const totalValue = data.reduce((sum, d) => sum + (Number(d.price) || 0), 0);
-  const avgSize = totalProjects ? (data.reduce((s, d) => s + (Number(d.size) || 0), 0) / totalProjects) : 0;
+  const avgSize = totalProjects
+    ? data.reduce((s, d) => s + (Number(d.size) || 0), 0) / totalProjects
+    : 0;
 
   // Status breakdown
-  const onTrack = data.filter(d => (d.status || '').toLowerCase() === 'in progress').length;
-  const completed = data.filter(d => (d.status || '').toLowerCase() === 'finished').length;
-  const delayed = data.filter(d => (d.status || '').toLowerCase() === 'delayed').length;
+  const onTrack = data.filter(
+    (d) => (d.status || "").toLowerCase() === "in progress"
+  ).length;
+  const completed = data.filter(
+    (d) => (d.status || "").toLowerCase() === "finished"
+  ).length;
+  const delayed = data.filter(
+    (d) => (d.status || "").toLowerCase() === "delayed"
+  ).length;
 
   // Growth vs last month
-  const byMonthCount = groupByMonth(data, 'count');
+  const byMonthCount = groupByMonth(data, "count");
   const now = new Date();
   const thisM = now.getMonth();
   const lastM = (thisM - 1 + 12) % 12;
   const thisMonthCount = byMonthCount[thisM]?.value || 0;
   const lastMonthCount = byMonthCount[lastM]?.value || 0;
-  const projectsGrowth = lastMonthCount === 0 ? (thisMonthCount > 0 ? 100 : 0) : ((thisMonthCount - lastMonthCount) / lastMonthCount) * 100;
+  const projectsGrowth =
+    lastMonthCount === 0
+      ? thisMonthCount > 0
+        ? 100
+        : 0
+      : ((thisMonthCount - lastMonthCount) / lastMonthCount) * 100;
 
   // Value growth (sum of price per month)
   const byMonthValueRaw = data.reduce((acc, d) => {
@@ -102,23 +147,43 @@ const calculateKpis = (data) => {
   }, {});
   const thisMonthValue = byMonthValueRaw[thisM] || 0;
   const lastMonthValue = byMonthValueRaw[lastM] || 0;
-  const valueGrowth = lastMonthValue === 0 ? (thisMonthValue > 0 ? 100 : 0) : ((thisMonthValue - lastMonthValue) / lastMonthValue) * 100;
+  const valueGrowth =
+    lastMonthValue === 0
+      ? thisMonthValue > 0
+        ? 100
+        : 0
+      : ((thisMonthValue - lastMonthValue) / lastMonthValue) * 100;
 
   // Avg size growth
   const byMonthSizeAgg = data.reduce((acc, d) => {
     if (!d.ts) return acc;
     const m = new Date(d.ts).getMonth();
     acc[m] = acc[m] || { sum: 0, c: 0 };
-    acc[m].sum += (Number(d.size) || 0);
+    acc[m].sum += Number(d.size) || 0;
     acc[m].c += 1;
     return acc;
   }, {});
-  const thisMonthAvgSize = byMonthSizeAgg[thisM] ? (byMonthSizeAgg[thisM].sum / byMonthSizeAgg[thisM].c) : 0;
-  const lastMonthAvgSize = byMonthSizeAgg[lastM] ? (byMonthSizeAgg[lastM].sum / byMonthSizeAgg[lastM].c) : 0;
-  const avgSizeGrowth = lastMonthAvgSize === 0 ? (thisMonthAvgSize > 0 ? 100 : 0) : ((thisMonthAvgSize - lastMonthAvgSize) / lastMonthAvgSize) * 100;
+  const thisMonthAvgSize = byMonthSizeAgg[thisM]
+    ? byMonthSizeAgg[thisM].sum / byMonthSizeAgg[thisM].c
+    : 0;
+  const lastMonthAvgSize = byMonthSizeAgg[lastM]
+    ? byMonthSizeAgg[lastM].sum / byMonthSizeAgg[lastM].c
+    : 0;
+  const avgSizeGrowth =
+    lastMonthAvgSize === 0
+      ? thisMonthAvgSize > 0
+        ? 100
+        : 0
+      : ((thisMonthAvgSize - lastMonthAvgSize) / lastMonthAvgSize) * 100;
 
   return {
-    totalProjects: { total: totalProjects, growth: projectsGrowth, onTrack, delayed, completed },
+    totalProjects: {
+      total: totalProjects,
+      growth: projectsGrowth,
+      onTrack,
+      delayed,
+      completed,
+    },
     totalValue: { total: totalValue, growth: valueGrowth },
     avgSize: { value: avgSize, growth: avgSizeGrowth },
   };
@@ -134,11 +199,11 @@ export default function Dashboard() {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [userRole, setUserRole] = useState('viewer'); // 'viewer' or 'admin'
+  const [userRole, setUserRole] = useState("viewer"); // 'viewer' or 'admin'
   const [filters, setFilters] = useState({
-    status: 'all', // 'all', 'in progress', 'finished', 'delayed'
-    minPrice: '',
-    maxPrice: '',
+    status: "all", // 'all', 'in progress', 'finished', 'delayed'
+    minPrice: "",
+    maxPrice: "",
     selectedCities: [],
     selectedTypes: [],
   });
@@ -150,9 +215,9 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/data');
+        const response = await fetch("/api/data");
         if (!response.ok) {
-          throw new Error('Failed to fetch data');
+          throw new Error("Failed to fetch data");
         }
         const result = await response.json();
         // The API returns { ok: true, data: [...] }
@@ -161,7 +226,7 @@ export default function Dashboard() {
         setFilteredData(apiData);
       } catch (err) {
         setError(err.message);
-        console.error('Error fetching data:', err);
+        console.error("Error fetching data:", err);
       } finally {
         setLoading(false);
       }
@@ -173,78 +238,82 @@ export default function Dashboard() {
   // Apply filters when they change
   useEffect(() => {
     let result = [...data];
-    
-    if (filters.status !== 'all') {
-      result = result.filter(item => 
-        Array.isArray(item.status) 
+
+    if (filters.status !== "all") {
+      result = result.filter((item) =>
+        Array.isArray(item.status)
           ? item.status.includes(filters.status)
           : item.status === filters.status
       );
     }
-    
+
     if (filters.minPrice) {
-      result = result.filter(item => item.price >= Number(filters.minPrice));
+      result = result.filter((item) => item.price >= Number(filters.minPrice));
     }
-    
+
     if (filters.maxPrice) {
-      result = result.filter(item => item.price <= Number(filters.maxPrice));
+      result = result.filter((item) => item.price <= Number(filters.maxPrice));
     }
-    
+
     if (filters.selectedCities.length > 0) {
-      result = result.filter(item => filters.selectedCities.includes(item.city));
+      result = result.filter((item) =>
+        filters.selectedCities.includes(item.city)
+      );
     }
-    
+
     if (filters.selectedTypes.length > 0) {
-      result = result.filter(item => {
-        const type = (item.propertyType || '').toLowerCase();
-        return filters.selectedTypes.some(selectedType => 
+      result = result.filter((item) => {
+        const type = (item.propertyType || "").toLowerCase();
+        return filters.selectedTypes.some((selectedType) =>
           type.includes(selectedType.toLowerCase())
         );
       });
     }
-    
+
     setFilteredData(result);
   }, [data, filters]);
 
   // Get unique cities and property types for filter
-  const cities = [...new Set(data.map(item => item.city).filter(Boolean))];
-  const propertyTypes = [...new Set(data.map(item => item.propertyType).filter(Boolean))];
+  const cities = [...new Set(data.map((item) => item.city).filter(Boolean))];
+  const propertyTypes = [
+    ...new Set(data.map((item) => item.propertyType).filter(Boolean)),
+  ];
 
   // Toggle user role (this would typically come from auth context in a real app)
   const toggleUserRole = () => {
-    const newRole = userRole === 'viewer' ? 'admin' : 'viewer';
+    const newRole = userRole === "viewer" ? "admin" : "viewer";
     setUserRole(newRole);
     // In a real app, you would update the user role in your auth context/state
-    localStorage.setItem('userRole', newRole);
+    localStorage.setItem("userRole", newRole);
   };
-  
+
   // Handle logout
   const handleLogout = () => {
     // In a real app, you would clear the auth token and user data
-    localStorage.removeItem('userRole');
-    if (typeof window !== 'undefined') {
-      window.location.href = '/';
+    localStorage.removeItem("userRole");
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
     }
   };
 
   // Check authentication status on component mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const role = localStorage.getItem('userRole');
-      
+    if (typeof window !== "undefined") {
+      const role = localStorage.getItem("userRole");
+
       // If no role found, redirect to login
       if (!role) {
-        window.location.href = '/';
+        window.location.href = "/";
         return;
       }
-      
+
       // Set the user role in state
       setUserRole(role);
-      
+
       // If somehow we got here with an invalid role, redirect to login
-      if (role !== 'admin' && role !== 'viewer') {
-        localStorage.removeItem('userRole');
-        window.location.href = '/';
+      if (role !== "admin" && role !== "viewer") {
+        localStorage.removeItem("userRole");
+        window.location.href = "/";
       }
     }
   }, []);
@@ -254,7 +323,7 @@ export default function Dashboard() {
 
   // Projects per month (data-driven and smoothed so it looks nice; responds to filters)
   const projectsPerMonth = (() => {
-    const raw = groupByMonth(filteredData, 'count');
+    const raw = groupByMonth(filteredData, "count");
     // 3-point moving average smoothing
     return raw.map((d, i, arr) => {
       const prev = arr[i - 1]?.value ?? d.value;
@@ -267,44 +336,72 @@ export default function Dashboard() {
   // Market size by location ($)
   const marketByLocation = Object.values(
     filteredData.reduce((acc, d) => {
-      const key = (d.city || 'Other');
+      const key = d.city || "Other";
       acc[key] = acc[key] || { name: key, value: 0 };
       acc[key].value += Number(d.price) || 0;
       return acc;
     }, {})
-  ).sort((a,b) => b.value - a.value).slice(0, 8);
+  )
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 8);
 
   // Property Type Distribution (normalize to 80 items = 16 each when no filters are applied)
   // Use the existing `filters` state; treat "no filters" as: status is 'all', no min/max, no selected cities/types
-  const noFiltersActive = (
-    filters.status === 'all' &&
+  const noFiltersActive =
+    filters.status === "all" &&
     !filters.minPrice &&
     !filters.maxPrice &&
-    Array.isArray(filters.selectedCities) && filters.selectedCities.length === 0 &&
-    Array.isArray(filters.selectedTypes) && filters.selectedTypes.length === 0
-  );
+    Array.isArray(filters.selectedCities) &&
+    filters.selectedCities.length === 0 &&
+    Array.isArray(filters.selectedTypes) &&
+    filters.selectedTypes.length === 0;
 
   const computedPropertyTypeData = [
-    { name: 'Villa', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'villa').length },
-    { name: 'Apartment', value: filteredData.filter(item => (item.propertyType || '').toLowerCase().includes('apart')).length },
-    { name: 'Duplex', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'duplex').length },
-    { name: 'Penthouse', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'penthouse').length },
-    { name: 'Townhouse', value: filteredData.filter(item => (item.propertyType || '').toLowerCase() === 'townhouse').length },
+    {
+      name: "Villa",
+      value: filteredData.filter(
+        (item) => (item.propertyType || "").toLowerCase() === "villa"
+      ).length,
+    },
+    {
+      name: "Apartment",
+      value: filteredData.filter((item) =>
+        (item.propertyType || "").toLowerCase().includes("apart")
+      ).length,
+    },
+    {
+      name: "Duplex",
+      value: filteredData.filter(
+        (item) => (item.propertyType || "").toLowerCase() === "duplex"
+      ).length,
+    },
+    {
+      name: "Penthouse",
+      value: filteredData.filter(
+        (item) => (item.propertyType || "").toLowerCase() === "penthouse"
+      ).length,
+    },
+    {
+      name: "Townhouse",
+      value: filteredData.filter(
+        (item) => (item.propertyType || "").toLowerCase() === "townhouse"
+      ).length,
+    },
   ];
 
   const propertyTypeData = noFiltersActive
     ? [
-        { name: 'Villa', value: 16 },
-        { name: 'Apartment', value: 16 },
-        { name: 'Duplex', value: 16 },
-        { name: 'Penthouse', value: 16 },
-        { name: 'Townhouse', value: 16 },
+        { name: "Villa", value: 16 },
+        { name: "Apartment", value: 16 },
+        { name: "Duplex", value: 16 },
+        { name: "Penthouse", value: 16 },
+        { name: "Townhouse", value: 16 },
       ]
     : computedPropertyTypeData;
 
   // Handle add data button click
   const handleAddData = () => {
-    router.push('/add-data');
+    router.push("/add-data");
   };
 
   if (loading) {
@@ -330,328 +427,424 @@ export default function Dashboard() {
       <div className="flex">
         <Sidebar onLogout={handleLogout} />
         <div className="flex-1 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-12">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard Overview</h1>
-            </div>
-          <div className="flex items-center gap-4">
-            {userRole === 'admin' && (
-              <Button 
-                onClick={handleAddData} 
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4" />
-                Add Data
-              </Button>
-            )}
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="outline"
-                onClick={handleLogout}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-        
-        {/* Advanced Filter Section */}
-        <div className="mb-8 mt-8">
-          <AdvancedFilter
-            cities={cities}
-            propertyTypes={propertyTypes}
-            selectedCities={filters.selectedCities}
-            selectedTypes={filters.selectedTypes}
-            onCitiesChange={(cities) => setFilters({...filters, selectedCities: cities})}
-            onTypesChange={(types) => setFilters({...filters, selectedTypes: types})}
-          />
-          
-          {/* Additional Filters */}
-          <Card className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <Label htmlFor="status-filter" className="block text-sm font-medium text-gray-700 mb-1">Status</Label>
-                <select
-                  id="status-filter"
-                  className="w-full rounded-md border border-gray-300 p-2 text-sm"
-                  value={filters.status}
-                  onChange={(e) => setFilters({...filters, status: e.target.value})}
-                >
-                  <option value="all">All Status</option>
-                  <option value="in progress">In Progress</option>
-                  <option value="finished">Finished</option>
-                  <option value="delayed">Delayed</option>
-                </select>
+          <div className="max-w-7xl mx-auto">
+            {/* Header Section */}
+            <div className="mb-12">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">
+                    Dashboard Overview
+                  </h1>
+                </div>
+                <div className="flex items-center gap-4">
+                  {userRole === "admin" && (
+                    <Button
+                      onClick={handleAddData}
+                      className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Data
+                    </Button>
+                  )}
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleLogout}
+                      className="flex items-center gap-2"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Logout
+                    </Button>
+                  </div>
+                </div>
               </div>
-              
-              <div>
-                <Label htmlFor="min-price" className="block text-sm font-medium text-gray-700 mb-1">Min Price</Label>
-                <input
-                  type="number"
-                  id="min-price"
-                  className="w-full rounded-md border border-gray-300 p-2 text-sm"
-                  placeholder="Min price"
-                  value={filters.minPrice}
-                  onChange={(e) => setFilters({...filters, minPrice: e.target.value})}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="max-price" className="block text-sm font-medium text-gray-700 mb-1">Max Price</Label>
-                <input
-                  type="number"
-                  id="max-price"
-                  className="w-full rounded-md border border-gray-300 p-2 text-sm"
-                  placeholder="Max price"
-                  value={filters.maxPrice}
-                  onChange={(e) => setFilters({...filters, maxPrice: e.target.value})}
-                />
-              </div>
-            </div>
-          </Card>
-        </div>
-        
-        {/* Statistic Cards */}
-        <div className="grid gap-6 md:grid-cols-3 mb-8">
-          {/* KPI 1: Total Projects with Status Breakdown */}
-          <TotalProjectsCard 
-            totalProjects={kpis.totalProjects.total}
-            change={`+${kpis.totalProjects.growth.toFixed(1)}% vs last month`}
-            changeType={kpis.totalProjects.growth >= 0 ? 'positive' : 'negative'}
-            onTrack={kpis.totalProjects.onTrack}
-            delayed={kpis.totalProjects.delayed}
-            completed={kpis.totalProjects.completed}
-            dateRange="From Jan 01 - Jul 30, 2024"
-          />
-          
-          {/* KPI 2: Total Estimated Construction Value */}
-          <StatisticCard 
-            title="Total Estimated Construction Value"
-            value={`$${kpis.totalValue.total.toLocaleString(undefined,{maximumFractionDigits:0})}`}
-            change={`+${kpis.totalValue.growth.toFixed(1)}% Growth`}
-            changeType={kpis.totalValue.growth >= 0 ? 'positive' : 'negative'}
-            icon={DollarSign}
-            iconColor="text-blue-600"
-            bgColor="bg-blue-50"
-            dateRange="From Jan 01 - Jul 30, 2024"
-          />
-          
-          {/* KPI 3: Average Project Size */}
-          <StatisticCard 
-            title="Average Project Size (m²)"
-            value={Math.round(kpis.avgSize.value).toLocaleString()}
-            change={`+${kpis.avgSize.growth.toFixed(1)}%`}
-            changeType={kpis.avgSize.growth >= 0 ? 'positive' : 'negative'}
-            icon={Home}
-            iconColor="text-green-600"
-            bgColor="bg-green-50"
-            dateRange="From Jan 01 - Jul 30, 2024"
-          />
-        </div>
 
-        {/* Main Charts */}
-        <div className="grid gap-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <AreaChartComponent 
-              data={projectsPerMonth}
-              title="Projects Added Per Month"
-              dataKey="value"
-              valueSuffix=""
-            />
-            <BarChartComponent 
-              data={marketByLocation}
-              title="Market Size by Location ($)"
-              dataKey="value"
-              valueSuffix="$"
-            />
-          </div>
-          
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Recent Activity */}
-            <Card className="p-6">
-              <h3 className="text-sm font-medium text-gray-900 mb-4">Recent Activity</h3>
-              <div className="space-y-4">
-                {filteredData
-                  .sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0))
-                  .slice(0, 4)
-                  .map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-2 w-2 rounded-full bg-blue-500"></div>
-                        <div>
-                          <p className="text-sm font-medium">
-                            {item.propertyType || 'Property'} in {item.city || 'Unknown'}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {item.ts ? new Date(item.ts).toLocaleDateString() : 'Unknown date'}
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-sm text-blue-500">View</span>
+              {/* Advanced Filter Section */}
+              <div className="mb-8 mt-8">
+                <AdvancedFilter
+                  cities={cities}
+                  propertyTypes={propertyTypes}
+                  selectedCities={filters.selectedCities}
+                  selectedTypes={filters.selectedTypes}
+                  onCitiesChange={(cities) =>
+                    setFilters({ ...filters, selectedCities: cities })
+                  }
+                  onTypesChange={(types) =>
+                    setFilters({ ...filters, selectedTypes: types })
+                  }
+                />
+
+                {/* Additional Filters */}
+                <Card className="p-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label
+                        htmlFor="status-filter"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Status
+                      </Label>
+                      <select
+                        id="status-filter"
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                        value={filters.status}
+                        onChange={(e) =>
+                          setFilters({ ...filters, status: e.target.value })
+                        }
+                      >
+                        <option value="all">All Status</option>
+                        <option value="in progress">In Progress</option>
+                        <option value="finished">Finished</option>
+                        <option value="delayed">Delayed</option>
+                      </select>
                     </div>
-                  ))}
-              </div>
-              
-              {/* Activity Categories Count */}
-              <div className="mt-6 pt-4 border-t border-gray-100">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-sm font-medium text-gray-700">Activity Summary</span>
-                </div>
-                
-                {/* Calculate counts based on data distribution */}
-                {(() => {
-                  const totalCount = filteredData.length;
-                  const recentCount = Math.floor(totalCount * 0.3); // 30% for recent
-                  const lastMonthCount = Math.floor(totalCount * 0.4); // 40% for last month
-                  const lastQuarterCount = totalCount - recentCount - lastMonthCount; // remaining
-                  
-                  return (
-                    <>
-                      {/* Progress Bar */}
-                      <div className="mb-3">
-                        <div className="flex h-2 bg-gray-200 rounded-full overflow-hidden">
-                          <div 
-                            className="bg-emerald-500 h-full transition-all duration-300"
-                            style={{ width: `${(recentCount / Math.max(totalCount, 1)) * 100}%` }}
-                          ></div>
-                          <div 
-                            className="bg-orange-500 h-full transition-all duration-300"
-                            style={{ width: `${(lastMonthCount / Math.max(totalCount, 1)) * 100}%` }}
-                          ></div>
-                          <div 
-                            className="bg-emerald-600 h-full transition-all duration-300"
-                            style={{ width: `${(lastQuarterCount / Math.max(totalCount, 1)) * 100}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                      
-                      {/* Labels */}
-                      <div className="flex items-center justify-between text-xs text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                          <span>Recent: {recentCount}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                          <span>This Month: {lastMonthCount}</span>
-                        </div>
-                        
-                        <div className="flex items-center gap-1">
-                          <div className="w-2 h-2 rounded-full bg-emerald-600"></div>
-                          <span>This Quarter: {lastQuarterCount}</span>
-                        </div>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-            </Card>
-            
-            {/* Property Type Distribution Pie Chart (Dynamic + brand palette) */}
-            <PieShadcnStandalone 
-              data={propertyTypeData}
-              title="Property Type Distribution"
-              description=""
-              colors={["#6a329f", "#601f9e", "#522081", "#360f5a", "#1c0333"]}
-            />
-          </div>
-          
-          {/* Large Centered Map */}
-          <Card className="p-6 shadow-sm border border-gray-100">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-900">Projects Map</h3>
-              <div className="flex items-center gap-2 text-xs text-gray-500">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <span>High Value</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span>Medium Value</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
-                  <span>Low Value</span>
-                </div>
-              </div>
-            </div>
-            <div className="h-96 w-full">
-              <InteractiveMap data={filteredData} />
-            </div>
-          </Card>
-        </div>
 
-        {/* Data Table */}
-        <Card className="mt-8">
-          <div className="p-4 border-b flex justify-between items-center">
-            <div>
-              <h3 className="text-lg font-medium">Property Listings</h3>
-              <p className="text-sm text-gray-500">Showing {filteredData.length} properties</p>
-            </div>
-            {userRole === 'admin' && (
-              <Button onClick={handleAddData} className="flex items-center gap-2">
-                <Plus className="h-4 w-4" />
-                Add New Property
-              </Button>
-            )}
-          </div>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Size (sqm)</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>City</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Floors</TableHead>
-                  <TableHead>Parking</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredData.length > 0 ? (
-                  filteredData.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium">{item.propertyType || 'N/A'}</TableCell>
-                      <TableCell>{item.size ? formatNumber(item.size) : 'N/A'}</TableCell>
-                      <TableCell>${item.price ? formatNumber(item.price) : 'N/A'}</TableCell>
-                      <TableCell>{item.city || 'N/A'}</TableCell>
-                      <TableCell>
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          item.status?.toLowerCase() === 'finished' ? 'bg-green-100 text-green-800' : 
-                          item.status?.toLowerCase() === 'in progress' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {item.status || 'N/A'}
+                    <div>
+                      <Label
+                        htmlFor="min-price"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Min Price
+                      </Label>
+                      <input
+                        type="number"
+                        id="min-price"
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                        placeholder="Min price"
+                        value={filters.minPrice}
+                        onChange={(e) =>
+                          setFilters({ ...filters, minPrice: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <div>
+                      <Label
+                        htmlFor="max-price"
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Max Price
+                      </Label>
+                      <input
+                        type="number"
+                        id="max-price"
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm"
+                        placeholder="Max price"
+                        value={filters.maxPrice}
+                        onChange={(e) =>
+                          setFilters({ ...filters, maxPrice: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* Statistic Cards */}
+              <div className="grid gap-6 md:grid-cols-3 mb-8">
+                {/* KPI 1: Total Projects with Status Breakdown */}
+                <TotalProjectsCard
+                  totalProjects={kpis.totalProjects.total}
+                  change={`+${kpis.totalProjects.growth.toFixed(
+                    1
+                  )}% vs last month`}
+                  changeType={
+                    kpis.totalProjects.growth >= 0 ? "positive" : "negative"
+                  }
+                  onTrack={kpis.totalProjects.onTrack}
+                  delayed={kpis.totalProjects.delayed}
+                  completed={kpis.totalProjects.completed}
+                  dateRange="From Jan 01 - Jul 30, 2024"
+                />
+
+                {/* KPI 2: Total Estimated Construction Value */}
+                <StatisticCard
+                  title="Total Estimated Construction Value"
+                  value={`$${kpis.totalValue.total.toLocaleString(undefined, {
+                    maximumFractionDigits: 0,
+                  })}`}
+                  change={`+${kpis.totalValue.growth.toFixed(1)}% Growth`}
+                  changeType={
+                    kpis.totalValue.growth >= 0 ? "positive" : "negative"
+                  }
+                  icon={DollarSign}
+                  iconColor="text-blue-600"
+                  bgColor="bg-blue-50"
+                  dateRange="From Jan 01 - Jul 30, 2024"
+                />
+
+                {/* KPI 3: Average Project Size */}
+                <StatisticCard
+                  title="Average Project Size (m²)"
+                  value={Math.round(kpis.avgSize.value).toLocaleString()}
+                  change={`+${kpis.avgSize.growth.toFixed(1)}%`}
+                  changeType={
+                    kpis.avgSize.growth >= 0 ? "positive" : "negative"
+                  }
+                  icon={Home}
+                  iconColor="text-green-600"
+                  bgColor="bg-green-50"
+                  dateRange="From Jan 01 - Jul 30, 2024"
+                />
+              </div>
+
+              {/* Main Charts */}
+              <div className="grid gap-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                  <AreaChartComponent
+                    data={projectsPerMonth}
+                    title="Projects Added Per Month"
+                    dataKey="value"
+                    valueSuffix=""
+                  />
+                  <BarChartComponent
+                    data={marketByLocation}
+                    title="Market Size by Location ($)"
+                    dataKey="value"
+                    valueSuffix="$"
+                  />
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  {/* Recent Activity */}
+                  <Card className="p-6">
+                    <h3 className="text-sm font-medium text-gray-900 mb-4">
+                      Recent Activity
+                    </h3>
+                    <div className="space-y-4">
+                      {filteredData
+                        .sort(
+                          (a, b) => new Date(b.ts || 0) - new Date(a.ts || 0)
+                        )
+                        .slice(0, 4)
+                        .map((item, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center justify-between"
+                          >
+                            <div className="flex items-center space-x-3">
+                              <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                              <div>
+                                <p className="text-sm font-medium">
+                                  {item.propertyType || "Property"} in{" "}
+                                  {item.city || "Unknown"}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {item.ts
+                                    ? new Date(item.ts).toLocaleDateString()
+                                    : "Unknown date"}
+                                </p>
+                              </div>
+                            </div>
+                            <span className="text-sm text-blue-500">View</span>
+                          </div>
+                        ))}
+                    </div>
+
+                    {/* Activity Categories Count */}
+                    <div className="mt-6 pt-4 border-t border-gray-100">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-gray-700">
+                          Activity Summary
                         </span>
-                      </TableCell>
-                      <TableCell>{item.floors || 'N/A'}</TableCell>
-                      <TableCell>{item.parking_spaces || '0'}</TableCell>
-                      <TableCell>
-                        <button className="text-blue-600 hover:underline text-sm">Edit</button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      No properties found matching your filters
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                      </div>
+
+                      {/* Calculate counts based on data distribution */}
+                      {(() => {
+                        const totalCount = filteredData.length;
+                        const recentCount = Math.floor(totalCount * 0.3); // 30% for recent
+                        const lastMonthCount = Math.floor(totalCount * 0.4); // 40% for last month
+                        const lastQuarterCount =
+                          totalCount - recentCount - lastMonthCount; // remaining
+
+                        return (
+                          <>
+                            {/* Progress Bar */}
+                            <div className="mb-3">
+                              <div className="flex h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div
+                                  className="bg-emerald-500 h-full transition-all duration-300"
+                                  style={{
+                                    width: `${
+                                      (recentCount / Math.max(totalCount, 1)) *
+                                      100
+                                    }%`,
+                                  }}
+                                ></div>
+                                <div
+                                  className="bg-orange-500 h-full transition-all duration-300"
+                                  style={{
+                                    width: `${
+                                      (lastMonthCount /
+                                        Math.max(totalCount, 1)) *
+                                      100
+                                    }%`,
+                                  }}
+                                ></div>
+                                <div
+                                  className="bg-emerald-600 h-full transition-all duration-300"
+                                  style={{
+                                    width: `${
+                                      (lastQuarterCount /
+                                        Math.max(totalCount, 1)) *
+                                      100
+                                    }%`,
+                                  }}
+                                ></div>
+                              </div>
+                            </div>
+
+                            {/* Labels */}
+                            <div className="flex items-center justify-between text-xs text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                                <span>Recent: {recentCount}</span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                                <span>This Month: {lastMonthCount}</span>
+                              </div>
+
+                              <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 rounded-full bg-emerald-600"></div>
+                                <span>This Quarter: {lastQuarterCount}</span>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
+                    </div>
+                  </Card>
+
+                  {/* Property Type Distribution Pie Chart (Dynamic + brand palette) */}
+                  <PieShadcnStandalone
+                    data={propertyTypeData}
+                    title="Property Type Distribution"
+                    description=""
+                    colors={[
+                      "#6a329f",
+                      "#601f9e",
+                      "#522081",
+                      "#360f5a",
+                      "#1c0333",
+                    ]}
+                  />
+                </div>
+
+                {/* Large Centered Map */}
+                <Card className="p-6 shadow-sm border border-gray-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-medium text-gray-900">
+                      Projects Map
+                    </h3>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                        <span>High Value</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                        <span>Medium Value</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <div className="w-2 h-2 rounded-full bg-yellow-500"></div>
+                        <span>Low Value</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="h-96 w-full">
+                    <InteractiveMap data={filteredData} />
+                  </div>
+                </Card>
+              </div>
+
+              {/* Data Table */}
+              <Card className="mt-8">
+                <div className="p-4 border-b flex justify-between items-center">
+                  <div>
+                    <h3 className="text-lg font-medium">Property Listings</h3>
+                    <p className="text-sm text-gray-500">
+                      Showing {filteredData.length} properties
+                    </p>
+                  </div>
+                  {userRole === "admin" && (
+                    <Button
+                      onClick={handleAddData}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add New Property
+                    </Button>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Size (sqm)</TableHead>
+                        <TableHead>Price</TableHead>
+                        <TableHead>City</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Floors</TableHead>
+                        <TableHead>Parking</TableHead>
+                        <TableHead></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredData.length > 0 ? (
+                        filteredData.map((item, index) => (
+                          <TableRow key={index}>
+                            <TableCell className="font-medium">
+                              {item.propertyType || "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              {item.size ? formatNumber(item.size) : "N/A"}
+                            </TableCell>
+                            <TableCell>
+                              ${item.price ? formatNumber(item.price) : "N/A"}
+                            </TableCell>
+                            <TableCell>{item.city || "N/A"}</TableCell>
+                            <TableCell>
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                  item.status?.toLowerCase() === "finished"
+                                    ? "bg-green-100 text-green-800"
+                                    : item.status?.toLowerCase() ===
+                                      "in progress"
+                                    ? "bg-yellow-100 text-yellow-800"
+                                    : "bg-gray-100 text-gray-800"
+                                }`}
+                              >
+                                {item.status || "N/A"}
+                              </span>
+                            </TableCell>
+                            <TableCell>{item.floors || "N/A"}</TableCell>
+                            <TableCell>{item.parking_spaces || "0"}</TableCell>
+                            <TableCell>
+                              <button className="text-blue-600 hover:underline text-sm">
+                                Edit
+                              </button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={7}
+                            className="text-center py-8 text-gray-500"
+                          >
+                            No properties found matching your filters
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </Card>
+            </div>
           </div>
-        </Card>
-      </div>
-    </div>
         </div>
       </div>
     </div>

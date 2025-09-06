@@ -55,7 +55,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex justify-center mb-8">
           <div className="relative h-12 w-48">
-            <Image src="/orcaframe-logo.png" alt="OrcaFrame Logo" fill className="object-contain" priority />
+            <Image src="/Orcaframe Logo 500x100 (1).png" alt="OrcaFrame Logo" fill className="object-contain" priority />
           </div>
         </div>
 
@@ -128,7 +128,7 @@ export default function LoginPage() {
         </Card>
 
         <div className="mt-8 text-center text-sm text-gray-500">
-          <p>© {new Date().getFullYear()} OrcaFrame. All rights reserved.</p>
+          <p>© 2025 DataInfo. All rights reserved.</p>
         </div>
       </div>
     </div>

@@ -58,7 +58,7 @@ export function AreaChartComponent({
                 formatter={(value, name) => [`${value}${valueSuffix}`, 'Projects']}
               />
               <Area
-                type="natural"
+                type="monotone"
                 dataKey={dataKey}
                 stroke="#7e22ce"
                 strokeWidth={3.5}

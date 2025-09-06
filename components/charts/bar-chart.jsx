@@ -17,7 +17,7 @@ export function BarChartComponent({ data, title, dataKey = 'value', valueSuffix 
             margin={{
               top: 0,
               right: 30,
-              left: 60,
+              left: 0,
               bottom: 0,
             }}
             barSize={20}
@@ -28,6 +28,7 @@ export function BarChartComponent({ data, title, dataKey = 'value', valueSuffix 
               axisLine={false}
               tickLine={false}
               tick={{ fill: '#6b7280' }}
+              padding={{ left: 0, right: 10 }}
             />
             <YAxis 
               axisLine={false}
